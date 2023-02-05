@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Audio Player</title>
+    <style>
+  body {
+    background-color: #222;
+  }
+  #audio-player {
+    width: 800px;
+    margin: 100px auto;
+    text-align: center;
+    background-color: #333;
+    border-radius: 20px;
+    box-shadow: 0px 0px 20px black;
+    color: #1d6bb9;
+  }
+  #file-input {
+    display: block;
+    margin: 40px auto;
+    padding: 35px 40px;
+    background-color: #333;
+    border: none;
+    border-radius: 100px;
+    cursor: pointer;
+    font-size: 20px;
+  }
+::file-selector-button {
+  color: #ffffff00;
+background-color: transparent;
+border: none;
+}
+#input {
+margin-top: 15px;
+}
+  #playlist {
+    list-style: none;
+    margin: 40px 0;
+    padding: 0;
+  }
+  #playlist li {
+    cursor: pointer;
+    padding: 20px 40px;
+    border-bottom: 2px solid gray;
+    font-size: 20px;
+    text-align: left;
+  }
+  #playlist li:hover {
+    background-color: #1d6bb9;
+    color: #333;
+  }
+  #playlist li.active {
+    background-color: #333;
+    color: #1d6bb9;
+  }
+  audio {
+    width: 75%;
+border: 1px solid #333;
+border-radius: 100px;
+margin-bottom: 10px;
+  }
+audio::-webkit-media-controls-play-button,
+     audio::-webkit-media-controls-panel {
+     background-color: #333;
+     color: #000;
+     }
+</style>
+  </head>
+  <body>
+    <div id="audio-player">
+      <input type="file" id="file-input" multiple />
+      <ul id="playlist"></ul>
+      <audio id="audio" controls loop></audio>
+    </div>
+    <script>
+      const fileInput = document.getElementById("file-input");
+      const playlist = document.getElementById("playlist");
+      const audio = document.getElementById("audio");
+
+      // Load saved playlist from local storage
+      let savedPlaylist = JSON.parse(localStorage.getItem("playlist")) || [];
+      for (const url of savedPlaylist) {
+        addToPlaylist(url);
+      }
+
+      // Add new audio files to playlist
+      fileInput.addEventListener("change", function () {
+        for (const file of this.files) {
+          const url = URL.createObjectURL(file);
+          addToPlaylist(url);
+          savedPlaylist.push(url);
+        }
+        localStorage.setItem("playlist", JSON.stringify(savedPlaylist));
+      });
+
+      // Handle playlist item clicks
+      playlist.addEventListener("click", function (event) {
+        if (event.target.tagName === "LI") {
+          audio.src = event.target.getAttribute("data-url");
+          audio.play();
+          for (const item of playlist.children) {
+            item.classList.remove("active");
+          }
+          event.target.classList.add("active");
+        }
+      });
+
+      // Play next track when current one ends
+      audio.addEventListener("ended", function () {
+        let nextItem = playlist.querySelector(".active + li") || playlist.firstElementChild;
+        if (nextItem) {
+          audio.src = nextItem.getAttribute("data-url");
+          audio.play();
+          for (const item of playlist.children) {
+            item.classList.remove("active");
+          }
+          nextItem.classList.add("active");
+        }
+      });
+
+      function addToPlaylist(url) {
+        const item = document.createElement("li");
+        item.setAttribute("data-url", url);
+        item.textContent = url.split("/").pop();
+        playlist.appendChild(item);
+      }
+    </script>
+  </body>
+</html>
